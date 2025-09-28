@@ -19,5 +19,11 @@ namespace DailyAccounting.Forms
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
+
+        private void ImageForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            pictureBox1.Image.Dispose();
+            GC.Collect();
+        }
     }
 }

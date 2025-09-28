@@ -36,14 +36,20 @@ namespace DailyAccounting.Forms
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
+
             PictureBox pictureBox = (PictureBox)sender;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "圖片檔|*.png;*jpg";
             //兩個enum互相比對，左邊是打開視窗後按下確定或取消後回傳enum，右邊是enum的表達方法
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
+                pictureBox.Image.Dispose();
+                pictureBox.Image = null;
+                GC.Collect();
                 pictureBox.Image = Image.FromFile(openFileDialog.FileName);
+
             }
+
         }
 
         private void comboBoxCategory_SelectedIndexChanged(object sender, EventArgs e)
@@ -61,13 +67,23 @@ namespace DailyAccounting.Forms
             string purpose = comboBoxPurpose.Text;
             string payWay = comboBoxPayWay.Text;
             string member = comboBoxMember.Text;
-            string imageURL1 = $"D:\\c#_Leo老師\\記帳資料\\Pictures\\{Guid.NewGuid()}.png";
-            string imageURL2 = $"D:\\c#_Leo老師\\記帳資料\\Pictures\\{Guid.NewGuid()}.png";
+            string imageURL1 = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\{Guid.NewGuid()}.jpg";
+            string imageURL2 = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\{Guid.NewGuid()}.jpg";
+            string imageFilePath = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures";
+            if (!Directory.Exists(imageFilePath))
+            {
+                Directory.CreateDirectory(imageFilePath);
+            }
             pictureBox1.Image.Save(imageURL1);
             pictureBox2.Image.Save(imageURL2);
             RecordModel recordModel = new RecordModel(day, amount, category, purpose, payWay, member, imageURL1, imageURL2);
-            CSVHelper.Write<RecordModel>("D:\\c#_Leo老師\\記帳資料\\record.csv", recordModel);
+            CSVHelper.Write<RecordModel>($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv", recordModel);
 
+            pictureBox1.Image.Dispose();
+            pictureBox2.Image.Dispose();
+            GC.Collect();
+            pictureBox1.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
+            pictureBox2.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
 
             //StreamWriter writer = new StreamWriter("D:\\c#_Leo老師\\記帳資料\\record.csv", true, Encoding.UTF8);
             //string line = $"{day},{amount},{category},{purpose},{payWay},{member},{imageURL1},{imageURL2}";
