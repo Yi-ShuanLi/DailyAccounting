@@ -1,4 +1,5 @@
 ﻿using CSV;
+using DailyAccounting.Extensions;
 using DailyAccounting.Models;
 using System;
 using System.Collections.Generic;
@@ -32,32 +33,36 @@ namespace DailyAccounting.Forms
 
         private void Search_Click(object sender, EventArgs e)
         {
-            dataGridView1.Rows.OfType<DataGridViewRow>().ToList().ForEach(row => { row.Cells.OfType<DataGridViewImageCell>().ToList().ForEach(cell => { cell.Dispose(); }); });
-            dataGridView1.DataSource = null;
-            dataGridView1.Columns.Clear();
-            GC.Collect();
-            datas = new List<RecordModel>();
-            if (dateTimePickerEnd.Value.Day < dateTimePickerStart.Value.Day)
+            this.DebounceTime(() =>
             {
-                MessageBox.Show("結束日期必須大於等於開始日期!!!");
-                return;
-            }
-            TimeSpan diff = dateTimePickerEnd.Value - dateTimePickerStart.Value;
-            for (int i = 0; i < diff.Days; i++)
-            {
-                string day = dateTimePickerStart.Value.AddDays(i).ToString("yyyy-MM-dd");
-                string dayFile = $"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv";
-                if (!File.Exists(dayFile))
+                datas = new List<RecordModel>();
+                if (dateTimePickerEnd.Value.Date < dateTimePickerStart.Value.Date)
                 {
-                    continue;
+                    MessageBox.Show("結束日期必須大於等於開始日期!!!");
+                    return;
                 }
-                datas.AddRange(CSVHelper.Read<RecordModel>(dayFile));
-            }
-            ShowTable();
+                TimeSpan diff = dateTimePickerEnd.Value - dateTimePickerStart.Value;
+                for (int i = 0; i < diff.Days; i++)
+                {
+                    string day = dateTimePickerStart.Value.AddDays(i).ToString("yyyy-MM-dd");
+                    string dayFile = $"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv";
+                    if (!File.Exists(dayFile))
+                    {
+                        continue;
+                    }
+                    datas.AddRange(CSVHelper.Read<RecordModel>(dayFile));
+                }
+                ShowTable();
+            });
+
         }
 
         private void ShowTable()
         {
+            dataGridView1.Rows.OfType<DataGridViewRow>().ToList().ForEach(row => { row.Cells.OfType<DataGridViewImageCell>().Select(cell => (Bitmap)cell.Value).ToList().ForEach(image => { image.Dispose(); }); });
+            dataGridView1.DataSource = null;
+            dataGridView1.Columns.Clear();
+            GC.Collect();
             dataGridView1.DataSource = datas;
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             //DataGridView組成:
@@ -130,12 +135,22 @@ namespace DailyAccounting.Forms
                 dataGridView1.Rows[i].Cells[4].Value = dataGridView1.Rows[i].Cells[5].Value;
                 dataGridView1.Rows[i].Cells[6].Value = dataGridView1.Rows[i].Cells[7].Value;
                 dataGridView1.Rows[i].Cells[8].Value = dataGridView1.Rows[i].Cells[9].Value;
+                //為了避免直接讀取檔案路徑而造成圖檔鎖定(所以其他檔案無法存取甚至是刪除)
+                //所以先透過讀取檔案並轉成二進位(副本)
+                //並將副本(Buffer) 存放到記憶體串流中
+                //這樣Bitmap就可以從串流中將檔案讀取出來轉乘Bitmap
                 string img10 = dataGridView1.Rows[i].Cells[11].Value.ToString();
-                Bitmap bitmap1 = new Bitmap(img10);
+                byte[] imageBuffer1 = File.ReadAllBytes(img10);
+                MemoryStream imageStream1 = new MemoryStream(imageBuffer1);
+                Bitmap bitmap1 = new Bitmap(imageStream1);
                 dataGridView1.Rows[i].Cells[10].Value = bitmap1;
+                //
                 string img12 = dataGridView1.Rows[i].Cells[13].Value.ToString();
-                Bitmap bitmap2 = new Bitmap(img12);
+                byte[] imageBuffer2 = File.ReadAllBytes(img12);
+                MemoryStream imageStream2 = new MemoryStream(imageBuffer2);
+                Bitmap bitmap2 = new Bitmap(imageStream2);
                 dataGridView1.Rows[i].Cells[12].Value = bitmap2;
+
                 dataGridView1.Rows[i].Cells[14].Value = new Bitmap("D:\\c#_Leo老師\\DailyAccounting\\垃圾桶icon.png");
             }
             this.dataGridView1.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellValueChanged);
@@ -172,8 +187,11 @@ namespace DailyAccounting.Forms
                 datas[rowIndex].Member = dataGridView1.Rows[rowIndex].Cells[8].Value.ToString();
 
 
-            File.Delete("D:\\c#_Leo老師\\記帳資料\\record.csv");
-            CSVHelper.Write<RecordModel>("D:\\c#_Leo老師\\記帳資料\\record.csv", datas);
+            string day = dataGridView1.Rows[rowIndex].Cells[0].Value.ToString();
+            List<RecordModel> recordModelSameDay = datas.Where(x => x.Day.Equals(day)).ToList();
+            File.Delete($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv");
+            CSVHelper.Write<RecordModel>($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv", recordModelSameDay);
+
 
 
 
@@ -187,23 +205,37 @@ namespace DailyAccounting.Forms
             {
                 columnIndex++;
                 string filePath = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
-                ImageForm imageForm = new ImageForm(filePath);
+                string newImageURL = filePath.Replace("40x40_", "50L_");
+                ImageForm imageForm = new ImageForm(newImageURL);
                 imageForm.ShowDialog();
+
             }
             else if (columnIndex == 14)
             {
                 string day = dataGridView1.Rows[rowIndex].Cells[0].Value.ToString();
-                dataGridView1.DataSource = null;
-                dataGridView1.Columns.Clear();
+                string image1URL = dataGridView1.Rows[rowIndex].Cells[11].Value.ToString();
+                string image2URL = dataGridView1.Rows[rowIndex].Cells[13].Value.ToString();
+                string newImage1URL = image1URL.Replace("40x40_", "50L_");
+                string newImage2URL = image2URL.Replace("40x40_", "50L_");
+
                 datas.RemoveAt(rowIndex);
-                ShowTable();
-                File.Delete($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv");
                 List<RecordModel> recordModelSameDay = datas.Where(x => x.Day.Equals(day)).ToList();
-                CSVHelper.Write<RecordModel>($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv", recordModelSameDay);
+                if (recordModelSameDay.Count == 0)
+                {
+                    Directory.Delete($"D:\\c#_Leo老師\\記帳資料\\{day}", true);
+                }
+                else
+                {
+                    File.Delete(image1URL);
+                    File.Delete(newImage1URL);
+                    File.Delete(image2URL);
+                    File.Delete(newImage2URL);
+                    File.Delete($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv");
+                    CSVHelper.Write<RecordModel>($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv", recordModelSameDay);
+                }
+                ShowTable();
+
             }
-
-
-
         }
 
         private void dateTimePickerStart_ValueChanged(object sender, EventArgs e)
@@ -214,7 +246,6 @@ namespace DailyAccounting.Forms
         private void dateTimePickerEnd_ValueChanged(object sender, EventArgs e)
         {
             dateTimePickerStart.MaxDate = dateTimePickerEnd.Value.AddDays(-1);
-
         }
     }
 }
