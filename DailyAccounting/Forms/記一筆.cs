@@ -21,7 +21,7 @@ namespace DailyAccounting.Forms
             InitializeComponent();
             comboBoxCategory.DataSource = DataModel.Category;
             comboBoxCategory.SelectedIndex = 0;
-            comboBoxPurpose.DataSource = DataModel.CategoryAndPurpose[DataModel.Category[0].ToString()];
+            comboBoxPurpose.DataSource = DataModel.Purpose[DataModel.Category[0].ToString()];
             comboBoxPayWay.DataSource = DataModel.PayWay;
             comboBoxMember.DataSource = DataModel.Member;
             pictureBox1.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
@@ -57,7 +57,7 @@ namespace DailyAccounting.Forms
         private void comboBoxCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             int index = comboBoxCategory.SelectedIndex;
-            comboBoxPurpose.DataSource = DataModel.CategoryAndPurpose[DataModel.Category[index].ToString()];
+            comboBoxPurpose.DataSource = DataModel.Purpose[DataModel.Category[index].ToString()];
         }
 
         private void button1_Click(object sender, EventArgs e)

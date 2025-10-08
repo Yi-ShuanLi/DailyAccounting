@@ -26,7 +26,7 @@ namespace DailyAccounting.Models
         public static List<string> PurposeOnMedical = new List<string>() { "掛號費", "藥品", "健檢", "醫療器材", "住院費" };
         public static List<string> PurposeOnEducation = new List<string>() { "學費", "學雜費", "教材費", "社團費", "校外活動" };
         public static List<string> PurposeOnTransferFee = new List<string>() { "跨行轉帳手續費", "匯款手續費", "國際轉帳費" };
-        public static Dictionary<string, List<string>> CategoryAndPurpose = new Dictionary<string, List<string>>() {
+        public static Dictionary<string, List<string>> Purpose = new Dictionary<string, List<string>>() {
             {"飲食",PurposeOnFood },
             {"日常用品",PurposeOnGroceries },
             {"交通",PuroseOnTransportation },

@@ -10,6 +10,18 @@ namespace 反射練習
     {
         static void Main(string[] args)
         {
+
+            FileAccess fileAccess = FileAccess.Read | FileAccess.Execute;
+
+            FileAccess[] accesses = { FileAccess.Read, FileAccess.Write, FileAccess.Execute };
+
+            foreach (var ac in accesses)
+            {
+                if ((fileAccess & ac) == 0)
+                    throw new Exception($"未擁有此{ac.ToString()}權限");
+            }
+
+
             Student student = Generate<Student>();
             PrintAllProps(student);
         }

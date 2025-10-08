@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ComboBoxColumnAttribute.cs" />
+    <Compile Include="Attributes\ImageColumnAttribute.cs" />
+    <Compile Include="Extensions\DataGridviewExtension.cs" />
     <Compile Include="Utility\ImageCompress.cs" />
     <Compile Include="Components\Navbar.cs">
       <SubType>UserControl</SubType>
@@ -88,7 +91,6 @@
     <Compile Include="Forms\記帳本.Designer.cs">
       <DependentUpon>記帳本.cs</DependentUpon>
     </Compile>
-    <Compile Include="HttpPostedFileBase.cs" />
     <Compile Include="Models\DataModel.cs" />
     <Compile Include="Models\RecordModel.cs" />
     <Compile Include="Program.cs" />
