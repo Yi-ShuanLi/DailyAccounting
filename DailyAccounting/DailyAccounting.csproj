@@ -33,10 +33,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper, Version=10.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoMapper.10.0.0\lib\net461\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="CSV">
       <HintPath>..\..\CSV\CSV\bin\Debug\CSV.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -51,7 +55,19 @@
   <ItemGroup>
     <Compile Include="Attributes\ComboBoxColumnAttribute.cs" />
     <Compile Include="Attributes\ImageColumnAttribute.cs" />
+    <Compile Include="Contract\AccountingBookContract.cs" />
+    <Compile Include="Contract\AddARecordContract.cs" />
     <Compile Include="Extensions\DataGridviewExtension.cs" />
+    <Compile Include="Models\DTOs\DataModelDTO.cs" />
+    <Compile Include="Models\DTOs\RecordModelDTO.cs" />
+    <Compile Include="Models\RecordViewModel.cs" />
+    <Compile Include="Presenters\AccountingBookPresenter.cs" />
+    <Compile Include="Presenters\RecordPresenter.cs" />
+    <Compile Include="Repositories\DataModelRepository.cs" />
+    <Compile Include="Repositories\IDataModelRepository.cs" />
+    <Compile Include="Repositories\IRecordRepository.cs" />
+    <Compile Include="Repositories\RecordOneRepository.cs" />
+    <Compile Include="Utility\Mapper.cs" />
     <Compile Include="Utility\ImageCompress.cs" />
     <Compile Include="Components\Navbar.cs">
       <SubType>UserControl</SubType>
@@ -91,8 +107,8 @@
     <Compile Include="Forms\記帳本.Designer.cs">
       <DependentUpon>記帳本.cs</DependentUpon>
     </Compile>
-    <Compile Include="Models\DataModel.cs" />
-    <Compile Include="Models\RecordModel.cs" />
+    <Compile Include="Repositories\Entites\DataModel.cs" />
+    <Compile Include="Repositories\Entites\RecordModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Components\Navbar.resx">
@@ -122,6 +138,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -135,6 +152,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Images\上傳示意圖.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\上傳示意圖2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\垃圾桶icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

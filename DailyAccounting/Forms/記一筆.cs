@@ -1,6 +1,8 @@
 ﻿using CSV;
 using DailyAccounting.Extensions;
 using DailyAccounting.Models;
+using DailyAccounting.Models.DTOs;
+using DailyAccounting.Presenters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,22 +13,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static DailyAccounting.Contract.AddARecordContract;
 
 namespace DailyAccounting.Forms
 {
-    public partial class 記一筆 : Form
+    public partial class 記一筆 : Form, IAddRecordView
     {
+        RecordPresenter recordPresenter;
         public 記一筆()
         {
             InitializeComponent();
-            comboBoxCategory.DataSource = DataModel.Category;
-            comboBoxCategory.SelectedIndex = 0;
-            comboBoxPurpose.DataSource = DataModel.Purpose[DataModel.Category[0].ToString()];
-            comboBoxPayWay.DataSource = DataModel.PayWay;
-            comboBoxMember.DataSource = DataModel.Member;
-            pictureBox1.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
+
+            recordPresenter = new RecordPresenter(this);
+            recordPresenter.GetComboBoxDataRequest();
+
+            pictureBox1.Image = Image.FromFile("Images\\上傳示意圖2.png");
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox2.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
+            pictureBox2.Image = Image.FromFile("Images\\上傳示意圖2.png");
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
@@ -37,7 +40,6 @@ namespace DailyAccounting.Forms
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-
             PictureBox pictureBox = (PictureBox)sender;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "圖片檔|*.png;*jpg";
@@ -47,22 +49,22 @@ namespace DailyAccounting.Forms
                 pictureBox.Image.Dispose();
                 pictureBox.Image = null;
                 GC.Collect();
-
-                pictureBox.Image = ImageCompress.Compress((Bitmap)Image.FromFile(openFileDialog.FileName));
-
+                var t = (Bitmap)Image.FromFile(openFileDialog.FileName);
+                pictureBox.Image = ImageCompress.Compress(t);
             }
-
         }
 
         private void comboBoxCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int index = comboBoxCategory.SelectedIndex;
-            comboBoxPurpose.DataSource = DataModel.Purpose[DataModel.Category[index].ToString()];
+            recordPresenter.ChangeCategoryRequest(comboBoxCategory.Text);
+        }
+        public void ChangeCategoryResponse(List<string> purpose)
+        {
+            comboBoxPurpose.DataSource = purpose;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             this.DebounceTime(() =>
             {
                 string day = dateTimePicker1.Value.ToString("yyyy-MM-dd");
@@ -71,45 +73,12 @@ namespace DailyAccounting.Forms
                 string purpose = comboBoxPurpose.Text;
                 string payWay = comboBoxPayWay.Text;
                 string member = comboBoxMember.Text;
-                string image1Guid = Guid.NewGuid().ToString();
-                string image2Guid = Guid.NewGuid().ToString();
-                string imageURL1 = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\40x40_{image1Guid}.jpg";
-                string imageURL2 = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\40x40_{image2Guid}.jpg";
-                string imageFilePath = $"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures";
 
-                if (!Directory.Exists(imageFilePath))
-                {
-                    Directory.CreateDirectory(imageFilePath);
-                }
-                pictureBox1.Image.Save(imageURL1);
-                pictureBox2.Image.Save(imageURL2);
+                RecordModelDTO recordModelDTO = new RecordModelDTO(day, amount, category, purpose, payWay, member, (Bitmap)pictureBox1.Image, (Bitmap)pictureBox2.Image);
+                recordPresenter.SaveRecord(recordModelDTO);
 
-                Bitmap bitmap1 = ImageCompress.Compress((Bitmap)pictureBox1.Image);
-                Bitmap bitmap1_40x40 = ImageCompress.Compress((Bitmap)pictureBox1.Image, 40, 40);
-                Bitmap bitmap2 = ImageCompress.Compress((Bitmap)pictureBox2.Image);
-                Bitmap bitmap2_40x40 = ImageCompress.Compress((Bitmap)pictureBox2.Image, 40, 40);
-                bitmap1_40x40.Save(imageURL1);
-                bitmap1.Save($"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\50L_{image1Guid}.jpg");
-                bitmap2_40x40.Save(imageURL2);
-                bitmap2.Save($"D:\\c#_Leo老師\\記帳資料\\{day}\\Pictures\\50L_{image2Guid}.jpg");
-
-                RecordModel recordModel = new RecordModel(day, amount, category, purpose, payWay, member, imageURL1, imageURL2);
-                CSVHelper.Write<RecordModel>($"D:\\c#_Leo老師\\記帳資料\\{day}\\record.csv", recordModel);
-                bitmap1_40x40.Dispose();
-                bitmap1.Dispose();
-                bitmap2_40x40.Dispose();
-                bitmap2.Dispose();
-                pictureBox1.Image.Dispose();
-                pictureBox2.Image.Dispose();
-                GC.Collect();
-                pictureBox1.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
-                pictureBox2.Image = Image.FromFile("D:\\c#_Leo老師\\DailyAccounting\\上傳示意圖2.png");
-
-                //StreamWriter writer = new StreamWriter("D:\\c#_Leo老師\\記帳資料\\record.csv", true, Encoding.UTF8);
-                //string line = $"{day},{amount},{category},{purpose},{payWay},{member},{imageURL1},{imageURL2}";
-                //writer.WriteLine(line); // 寫入該行資料
-                //writer.Flush();
-                //writer.Close();
+                pictureBox1.Image = Image.FromFile("Images\\上傳示意圖2.png");
+                pictureBox2.Image = Image.FromFile("Images\\上傳示意圖2.png");
 
                 //Streamming => 串流，多媒體影音串流平台: Youtube/Netflix/KKBox ..etc
                 //檔案下載演進史:
@@ -122,6 +91,15 @@ namespace DailyAccounting.Forms
             });
 
 
+        }
+
+        void IAddRecordView.GetComboBoxDataResponse(DataModelDTO dataModelDTO)
+        {
+            comboBoxCategory.DataSource = dataModelDTO.Category;
+            comboBoxCategory.SelectedIndex = 0;
+            comboBoxPurpose.DataSource = dataModelDTO.Purpose;
+            comboBoxPayWay.DataSource = dataModelDTO.PayWay;
+            comboBoxMember.DataSource = dataModelDTO.Member;
         }
 
 
